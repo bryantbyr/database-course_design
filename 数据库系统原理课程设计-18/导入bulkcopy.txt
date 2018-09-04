@@ -1,0 +1,95 @@
+  //导入函数
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (this.textBox1.Text == "")
+            {
+                MessageBox.Show("请选择导入文件路径");
+                return;
+            }
+
+            //定义sql连接
+            SqlConnectionStringBuilder sqlconStringBuilder = new SqlConnectionStringBuilder();
+            //sql连接字串
+            sqlconStringBuilder.ConnectionString = @"Data Source=(local);Initial Catalog=test;Integrated Security=True";
+
+            //定义excel路径
+            string path = openFileDialog1.FileName.ToString();
+            //定义excel连接
+            OleDbConnectionStringBuilder excelStringBuilder = new OleDbConnectionStringBuilder();
+            //excel连接字串
+            excelStringBuilder.ConnectionString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source='" + path + "';Extended Properties=Excel 8.0";
+
+            //建立excel连接
+            using (OleDbConnection con_excel = new OleDbConnection(excelStringBuilder.ConnectionString))
+            {
+                //打开excel文件
+                con_excel.Open();
+                //定义语句计算选定sheet中数据的行数
+                string strSql = string.Format("SELECT COUNT(*) FROM [{0}$]", comboBox1.SelectedItem.ToString());
+                //执行查询语句
+                OleDbCommand cmdSourceRowCount = new OleDbCommand(strSql, con_excel);
+                //建立数据库连接
+                using (SqlConnection con_bulkcopy = new SqlConnection(sqlconStringBuilder.ConnectionString))
+                {
+                    //打开数据库
+                    con_bulkcopy.Open();
+                    //定义语句计算表中的数据行数
+                    strSql = string.Format("SELECT COUNT(*) FROM {0}", comboBox1.SelectedItem.ToString());
+                    //执行查询语句
+                    SqlCommand cmdRowCount = new SqlCommand(strSql, con_bulkcopy);
+                    //定义超时
+                    cmdRowCount.CommandTimeout = 3600;
+                    //定义语句提取选定sheet中数据
+                    strSql = string.Format("SELECT * FROM [{0}$]", comboBox1.SelectedItem.ToString());
+                    //提取语句
+                    OleDbCommand cmdSourceData = new OleDbCommand(strSql, con_excel);
+                    //定义超时
+                    cmdSourceData.CommandTimeout = 3600;
+                    
+                    SqlBulkCopyOptions options = SqlBulkCopyOptions.FireTriggers;
+
+                    //progressBar1.Minimum = 1;
+                   // progressBar1.Maximum = Convert.ToInt32(cmdRowCount.ToString());
+                   // MessageBox.Show(cmdRowCount.ToString());
+                    //progressBar1.Value = 1;
+                    //progressBar1.Step = 1000;
+                    //switch(comboBox1.SelectedIndex)
+                    //{
+                    //    case 0: progressBar1.Maximum = 128;
+                    //      break;
+                    //    case 3: progressBar1.Maximum = 70000;
+                    //      break;
+                    //}
+
+                    //建立数据集
+                    using (OleDbDataReader excelReader = cmdSourceData.ExecuteReader())
+                    {
+                        //建立块拷贝
+                        using (SqlBulkCopy bcp = new SqlBulkCopy(sqlconStringBuilder.ConnectionString, options))
+                        {
+                            //以1000记录为单位
+                            bcp.BatchSize = 1000;
+                            //设定超时
+                            bcp.BulkCopyTimeout = 500000000;
+                            //设定通知事件前处理的数据行数
+                            bcp.NotifyAfter = 1000;
+                            //指定目标数据库表名
+                            bcp.DestinationTableName = comboBox1.SelectedItem.ToString();
+                            //导入
+                            bcp.WriteToServer(excelReader);
+
+                            //progressBar1.PerformStep();
+                        }
+                        //关闭数据集
+                        excelReader.Close();
+                    }
+                    //关闭数据库连接
+                    con_bulkcopy.Close();
+                }
+                //关闭excel文件
+                con_excel.Close();
+            }
+            //弹窗导入完成
+            MessageBox.Show("导入成功");
+
+        }
