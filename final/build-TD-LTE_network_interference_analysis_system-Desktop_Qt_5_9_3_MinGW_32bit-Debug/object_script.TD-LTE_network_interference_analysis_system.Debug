@@ -1,0 +1,14 @@
+INPUT(
+./debug\main.o
+./debug\mainwindow.o
+./debug\sign_up.o
+./debug\handler.o
+./debug\linechart.o
+./debug\prbchart.o
+./debug\moc_mainwindow.o
+./debug\moc_sign_up.o
+./debug\moc_handler.o
+./debug\moc_selectwindow.o
+./debug\moc_linechart.o
+./debug\moc_prbchart.o
+);

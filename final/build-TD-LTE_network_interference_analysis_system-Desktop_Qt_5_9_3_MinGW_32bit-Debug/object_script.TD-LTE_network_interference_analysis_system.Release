@@ -1,0 +1,14 @@
+INPUT(
+./release\main.o
+./release\mainwindow.o
+./release\sign_up.o
+./release\handler.o
+./release\linechart.o
+./release\prbchart.o
+./release\moc_mainwindow.o
+./release\moc_sign_up.o
+./release\moc_handler.o
+./release\moc_selectwindow.o
+./release\moc_linechart.o
+./release\moc_prbchart.o
+);
